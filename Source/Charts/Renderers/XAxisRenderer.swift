@@ -371,6 +371,12 @@ open class XAxisRenderer: AxisRendererBase
             var clippingRect = viewPortHandler.contentRect
             clippingRect.origin.x -= l.lineWidth / 2.0
             clippingRect.size.width += l.lineWidth
+
+            if xAxis.avoidFirstLastClippingEnabled {
+                clippingRect.origin.x -= (viewPortHandler.offsetLeft > clippingRect.origin.x ? clippingRect.origin.x : viewPortHandler.offsetLeft)
+                clippingRect.origin.y -= (viewPortHandler.offsetTop > clippingRect.origin.y ? clippingRect.origin.y : viewPortHandler.offsetTop)
+            }
+
             context.clip(to: clippingRect)
             
             position.x = CGFloat(l.limit)
@@ -384,10 +390,12 @@ open class XAxisRenderer: AxisRendererBase
     
     @objc open func renderLimitLineLine(context: CGContext, limitLine: ChartLimitLine, position: CGPoint)
     {
+        let topOffset = limitLine.labelPosition == .top ? limitLine.valueFont.lineHeight + 4 : 0
+        let bottomOffset = CGFloat(8)
         
         context.beginPath()
-        context.move(to: CGPoint(x: position.x, y: viewPortHandler.contentTop))
-        context.addLine(to: CGPoint(x: position.x, y: viewPortHandler.contentBottom))
+        context.move(to: CGPoint(x: position.x, y: viewPortHandler.contentTop + topOffset))
+        context.addLine(to: CGPoint(x: position.x, y: viewPortHandler.contentBottom - bottomOffset))
         
         context.setStrokeColor(limitLine.lineColor.cgColor)
         context.setLineWidth(limitLine.lineWidth)
@@ -448,11 +456,11 @@ open class XAxisRenderer: AxisRendererBase
             else
             {
                 ChartUtils.drawText(context: context,
-                    text: label,
-                    point: CGPoint(
-                        x: position.x - xOffset,
-                        y: viewPortHandler.contentBottom - labelLineHeight - yOffset),
-                    align: .right,
+                                    text: label,
+                                    point: CGPoint(
+                                        x: position.x + xOffset / 2,
+                                        y: viewPortHandler.contentTop),
+                    align: .center,
                     attributes: [NSAttributedStringKey.font: limitLine.valueFont, NSAttributedStringKey.foregroundColor: limitLine.valueTextColor])
             }
         }
